@@ -86,6 +86,32 @@ SIGNAL MONITOR — [date], [time]
 
 If zero relevant items: `No relevant signals. [Y] items checked, all skipped.`
 
+### Step 6 — Print weekly log
+
+After the signal output, always print this block:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WEEKLY LOG — fill this in and send to Sujith
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Date: [date]
+Profiles monitored: [number of profiles in profiles.json]
+Items checked: [Y]
+Signals found: [X]
+
+Did you act on any signal this week? (comment, DM, saved for later)
+→
+
+What was useful? What was noise?
+→
+
+Anything you want to change? (profiles to add/remove, criteria to tune)
+→
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+Pre-fill Date, Profiles monitored, Items checked, and Signals found. Leave the three arrow fields blank for the founder to fill in before sending.
+
 ---
 
 ## Files
