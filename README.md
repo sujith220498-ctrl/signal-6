@@ -68,11 +68,11 @@ Signal 6 uses two Apify actors to scrape LinkedIn. You need your own Apify accou
 | Actor | Cost |
 |---|---|
 | Posts (`harvestapi/linkedin-profile-posts`) | Low — a few seconds per profile |
-| Comments (`unseenuser/LinkedIn-user-comments-reactions`) | Higher — uses residential proxies |
+| Comments (`harvestapi/linkedin-profile-comments`) | $0.00 per comment — only compute time billed |
 
-**Recommended cadence: weekly.** The $29/month Starter plan supports ~4–6 runs/month comfortably.
+**Recommended cadence: daily.** Both actors are from HarvestAPI and are efficient enough for daily runs on the $29/month Starter plan.
 
-The comments actor scrapes a profile's full comment history but Signal 6 filters to the last 14 days before surfacing anything. Adjust `RECENCY_DAYS` in `run.py` to match your run cadence.
+Signal 6 caps comment scraping at `MAX_COMMENTS = 50` per profile per run and filters to the last `RECENCY_DAYS = 2` days. Adjust both in `run.py` to match your cadence.
 
 ---
 

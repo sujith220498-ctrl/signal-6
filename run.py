@@ -1,8 +1,7 @@
 import json
-import re
 import subprocess
 import os
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROFILES_FILE = os.path.join(SCRIPT_DIR, "profiles.json")
@@ -10,34 +9,29 @@ SEEN_FILE = os.path.join(SCRIPT_DIR, "seen.json")
 NEW_ITEMS_FILE = os.path.join(SCRIPT_DIR, "new_items.json")
 
 MAX_POSTS = 10
-MAX_COMMENTS = 20
-RECENCY_DAYS = 14  # only surface comments posted within this many days
+MAX_COMMENTS = 50   # actor stops here — free per event, only compute time billed
+RECENCY_DAYS = 2    # surface comments from last N days — set to match your run cadence
 
 
-def days_ago(ago_str):
-    s = ago_str.lower().split("•")[0].strip()
-    if any(w in s for w in ("just now", "now", "moment")):
-        return 0
-    m = re.search(r"(\d+)\s*(second|minute|hour|day|week|month|year)", s)
-    if not m:
-        return None
-    n, unit = int(m.group(1)), m.group(2)
-    if unit.startswith(("second", "minute", "hour")):
-        return 0
-    if unit.startswith("day"):
-        return n
-    if unit.startswith("week"):
-        return n * 7
-    if unit.startswith("month"):
-        return n * 30
-    if unit.startswith("year"):
-        return n * 365
-    return None
+def is_recent(created_at_str):
+    try:
+        created = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
+        cutoff = datetime.now(timezone.utc) - timedelta(days=RECENCY_DAYS)
+        return created >= cutoff
+    except Exception:
+        return True
 
 
-def is_recent(ago_str):
-    d = days_ago(ago_str)
-    return d is None or d <= RECENCY_DAYS
+def format_ago(created_at_str):
+    try:
+        created = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
+        delta = datetime.now(timezone.utc) - created
+        hours = int(delta.total_seconds() // 3600)
+        if hours < 24:
+            return f"{hours} hours ago"
+        return f"{delta.days} days ago"
+    except Exception:
+        return ""
 
 
 def load_seen():
@@ -79,8 +73,9 @@ def fetch_posts(profile_url):
 
 def fetch_comments(profile_url):
     print("  comments ...", flush=True)
-    return apify_call("unseenuser/LinkedIn-user-comments-reactions", {
-        "profiles": [profile_url]
+    return apify_call("harvestapi/linkedin-profile-comments", {
+        "profiles": [profile_url],
+        "maxComments": MAX_COMMENTS
     })
 
 
@@ -118,19 +113,20 @@ def main():
                 })
 
         raw_comments = fetch_comments(profile_url)
-        recent = [c for c in raw_comments if is_recent(c.get("created_at", {}).get("relative", ""))]
-        for c in recent[:MAX_COMMENTS]:
-            if c.get("comment_urn") and c["comment_urn"] not in seen_comment_ids:
+        recent = [c for c in raw_comments if is_recent(c.get("createdAt", ""))]
+        for c in recent:
+            comment_id = c.get("id")
+            if comment_id and comment_id not in seen_comment_ids:
                 new_comments.append({
                     "type": "comment",
-                    "id": c["comment_urn"],
-                    "name": c.get("commenter", {}).get("name", name),
-                    "ago": c.get("created_at", {}).get("relative", ""),
-                    "text": c.get("comment_text", "").strip(),
-                    "url": c.get("comment_link", "")
+                    "id": comment_id,
+                    "name": c.get("actor", {}).get("name", name),
+                    "ago": format_ago(c.get("createdAt", "")),
+                    "text": c.get("commentary", "").strip(),
+                    "url": c.get("linkedinUrl", "")
                 })
 
-        print(f"  → {len(posts)} posts, {len(recent[:MAX_COMMENTS])} comments (last {RECENCY_DAYS} days)\n", flush=True)
+        print(f"  → {len(posts)} posts, {len(recent)} comments (last {RECENCY_DAYS} days)\n", flush=True)
 
     total_new = len(new_posts) + len(new_comments)
     print(f"{'━'*50}", flush=True)

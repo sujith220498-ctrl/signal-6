@@ -133,5 +133,5 @@ Pre-fill Date, Profiles monitored, Items checked, and Signals found. Leave the t
 - **Tune what counts as a signal** → edit `relevance-prompt.md`
 - **Reset dedup (see everything again)** → delete `seen.json`
 - **Posts actor fails** → check Apify dashboard (`harvestapi/linkedin-profile-posts`)
-- **Comments actor fails** → check Apify dashboard (`unseenuser/LinkedIn-user-comments-reactions`)
+- **Comments actor fails** → check Apify dashboard (`harvestapi/linkedin-profile-comments`)
 - **Profile returns zero results** → vanity URL may have changed, update `profiles.json`
