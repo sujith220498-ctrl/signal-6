@@ -1,0 +1,4 @@
+seen.json
+new_items.json
+__pycache__/
+*.pyc
